@@ -31,9 +31,9 @@ const Footer = () => {
         <div>
             <p className='text-xl font-medium mb-5'>FOLLOW US</p>
             <div className='flex gap-4'>
-                <img src={assets.facebook} alt="Facebook" className='w-6 h-6 cursor-pointer'/>
+                <img src={assets.facebook_img} alt="Facebook" className='w-6 h-6 cursor-pointer'/>
                 
-                <img src={assets.instagram} alt="Instagram" className='w-6 h-6 cursor-pointer'/>
+                <img src={assets.instagram_img} alt="Instagram" className='w-6 h-6 cursor-pointer'/>
                
             </div>
         </div>
