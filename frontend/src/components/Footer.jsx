@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14  my-10 mt-40 text-sm'>
         <div>
-            <img src={assets.logo} alt="Logo" className='w-32 mb-4' />
+            <img src={assets.icon_logo} alt="Logo" className='w-32 mb-4' />
             <p className='text-gray-600'>Bespoke is your one-stop destination for trendy and affordable fashion. Discover a wide range of clothing and accessories that suit your style and budget. Shop now and elevate your wardrobe with Bespoke!</p>
         </div>
         <div>

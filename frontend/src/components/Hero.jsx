@@ -20,7 +20,7 @@ const Hero = () => {
                 </div>
             </div>
             {/*Hero right side */}
-            <img className='w-full sm:w-1/2' src={assets.hero_img} alt="Hero"/>
+            <img className='w-full sm:w-1/2' src={assets.suit_1} alt="Hero"/>
         </div>
         
 

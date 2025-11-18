@@ -3,6 +3,14 @@
 
 @import "tailwindcss";
 
+:root {
+  --color-dark-primary: #121212; /* Nearly black for backgrounds */
+  --color-dark-secondary: #210303; /* Deep, muted red/brown for accents */
+  --color-text-light: #ffffff;
+  --color-text-muted: #aaaaaa;
+  --font-serif: "Prata", serif; 
+  --font-sans: "Outfit", sans-serif;
+}
 
 a.active hr{
     border-color: #000000;
@@ -21,6 +29,34 @@ a.active hr{
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+
+.nav-link-modern {
+  position: relative;
+}
+
+.nav-link-modern::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; /* Adjust distance from text */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: currentColor; /* Matches text color (black) */
+  transform: scaleX(0); /* Hidden by default */
+  transition: transform 0.3s ease;
+}
+
+/* Hover/Focus State: Expand the underline */
+.nav-link-modern:hover::after,
+.nav-link-modern.active::after {
+  transform: scaleX(1);
+}
+
+/* Ensure the text is slightly bolder for the modern look */
+.nav-link-modern p {
+  font-weight: 500; /* Outfit font weight */
 }
 
 @media (max-width: 640px){

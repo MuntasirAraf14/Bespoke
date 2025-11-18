@@ -8,9 +8,10 @@ import ProductItem from '../components/ProductItem';
 import {assets} from '../assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
 
+
 const Product = () => {
   const {productId} = useParams();
-  const {products, currency} = useContext(ShopContext);
+  const {products, currency, addToCart} = useContext(ShopContext);
   const [productData, setProductData] = React.useState(false); // Use null instead of false
   const [image, setImage] = React.useState('');
   const [size, setSize] = React.useState('');
@@ -85,7 +86,7 @@ const Product = () => {
 
               </div>
            </div>
-           <button>
+           <button onClick={() => addToCart(productData._id, size)}>
             <div className='bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors duration-300 w-max'>
               Add to Cart
             </div>

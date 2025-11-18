@@ -5,7 +5,7 @@ const OurPolicy = () => {
   return (
     <div className='flex flex-col sm:flex-row justify-around gap-12 sm:gap-2 text-center py-20 text-xs sm:text-sm md:text-base text-gray-800'>
         <div>
-            <img src={assets.exchange_icon} className='w-12 m-auto mb-5' alt="Exchange Icon" />
+            <img src={assets.receving_img} className='w-12 m-auto mb-5' alt="Exchange Icon" />
             <h2 className='text-center text-xl font-semibold mb-2'>Easy Exchange Policy</h2>
             <p className='w-3/4 m-auto text-center text-gray-600 text-sm'>
                 We offer a hassle-free exchange policy within 30 days of purchase. If you're not completely satisfied with your order, simply contact our customer service team to initiate the exchange process. Please ensure that the items are in their original condition with tags attached.
