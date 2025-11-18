@@ -6,6 +6,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom' // Import useLocat
 import {useState} from 'react'
 import { ShopContext } from '../context/ShopContext';
 
+
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
   const { setShowSearch, getCartCount } = useContext(ShopContext);
@@ -51,7 +52,9 @@ const Navbar = () => {
 
         {/* Profile Dropdown */}
         <div className='group relative'>
-          <img src={assets.profile_icon} alt="User" className='w-5 cursor-pointer hover:opacity-75 transition-opacity' />
+          <Link to='/Login'> <img src={assets.profile_icon} alt="User" className='w-5 cursor-pointer hover:opacity-75 transition-opacity' />
+          </Link>
+         
           <div className='absolute top-10 right-0 w-32 bg-white shadow-xl rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50'>
               <p className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 rounded-t-md cursor-pointer'>My Profile</p>
               <p className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer'>Orders</p>

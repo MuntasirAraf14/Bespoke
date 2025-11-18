@@ -43,24 +43,27 @@ const PlaceOrder = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Final validation
-    if (getCartCount() === 0) {
-      alert("Your cart is empty. Please add items before placing an order.");
+  // If cart is empty
+  if (getCartCount() === 0) {
+    alert("Your cart is empty. Please add items before placing an order.");
+    return;
+  }
+
+  // Validate all address fields
+  for (let key in addressData) {
+    if (!addressData[key].trim()) {
+      alert("Please complete all delivery information fields.");
       return;
     }
-
-    // Logic to process order based on paymentMethod
-    console.log("Order submitted. Payment method:", paymentMethod);
-    // ... API call here ...
-  };
-
-  // Redirect if cart is empty
-  if (cartItemCount === 0) {
-    navigate("/cart");
-    return null;
   }
+
+  // Everything OK → proceed
+  console.log("Order submitted. Payment method:", paymentMethod);
+
+  navigate("/order"); // move here
+};
 
   const inputClass =
     "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black";
@@ -292,13 +295,13 @@ const PlaceOrder = () => {
             </div>
             {/* --- END MODIFIED PAYMENT SECTION --- */}
 
-            <button onClick={()=>navigate('/order')}
-              type="submit"
-              className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-            >
-              CONFIRM AND PAY ({currency}
-              {total.toFixed(2)})
-            </button>
+           <button
+  type="submit"
+  className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+>
+  CONFIRM AND PAY ({currency}{total.toFixed(2)})
+</button>
+
           </div>
         </div>
       </div>
