@@ -11,16 +11,13 @@ const ShopContextProvider = (props) => {
     const [search, setSearch] = React.useState('');
     const [showSearch, setShowSearch] = React.useState(false);
     
-    // --- MODIFICATION 1: INITIAL STATE ---
-    // Initialize cartItems by checking localStorage first. 
-    // If local storage has cart data, use it; otherwise, start with an empty object.
+    // 1. Initialize cartItems by checking localStorage first.
     const [cartItems, setCartItems] = React.useState(() => {
         const storedCart = localStorage.getItem('cartData');
         return storedCart ? JSON.parse(storedCart) : {};
     });    
 
-    // --- MODIFICATION 2: SYNCHRONIZATION EFFECT ---
-    // Save cartItems to localStorage whenever the state changes.
+    // 2. Synchronization Effect: Save cartItems to localStorage whenever the state changes.
     useEffect(() => {
         try {
             localStorage.setItem('cartData', JSON.stringify(cartItems));
@@ -28,8 +25,8 @@ const ShopContextProvider = (props) => {
             console.error("Error saving cart to local storage", e);
         }
     }, [cartItems]);
-    // ---------------------------------------------------
 
+    // --- Core Cart Management Functions ---
 
     const addToCart = async (itemId, size) => {
         if(!size){
@@ -37,7 +34,6 @@ const ShopContextProvider = (props) => {
             return;
         }
 
-        // Use structuredClone() for safer deep copying
         let newCartItems = structuredClone(cartItems);
         
         if(newCartItems[itemId]){
@@ -50,28 +46,16 @@ const ShopContextProvider = (props) => {
             newCartItems[itemId] = {};
             newCartItems[itemId][size] = 1;
         }
-        setCartItems(newCartItems); // This state change triggers the useEffect above
-    }
-    
-    // ... (All other functions like getCartCount, updateQuantity remain the same) ...
-
-    const getCartCount = () => {
-        let count = 0;
-        for(const itemId in cartItems){
-            for(const size in cartItems[itemId]){
-                if(cartItems[itemId][size] > 0){
-                    count += cartItems[itemId][size];
-                }
-            }
-        }
-        return count;
+        setCartItems(newCartItems);
     }
 
     const updateQuantity = (itemId, size, quantity) => {
         let newCartItems = structuredClone(cartItems);
         
+        if (!newCartItems[itemId] || !newCartItems[itemId][size]) return; 
+
         if (quantity <= 0) {
-            // If quantity is zero or less, delete the specific size entry
+            // Delete the specific size entry
             delete newCartItems[itemId][size];
             
             // If there are no more sizes for this item, delete the item key entirely
@@ -81,10 +65,59 @@ const ShopContextProvider = (props) => {
         } else {
             newCartItems[itemId][size] = quantity;
         }
-        setCartItems(newCartItems); // This state change triggers the useEffect above
+        setCartItems(newCartItems);
     }
 
-    // ... (rest of the value object and return statement remain the same) ...
+    const getCartCount = () => {
+        let count = 0;
+        for(const itemId in cartItems){
+            for(const size in cartItems[itemId]){
+                count += cartItems[itemId][size];
+            }
+        }
+        return count;
+    }
+    
+    // --- New Checkout Calculation Functions ---
+
+    const getSubtotal = () => {
+        let subtotal = 0;
+        for (const itemId in cartItems) {
+            const product = products.find(p => p._id === itemId);
+            if (product) {
+                for (const size in cartItems[itemId]) {
+                    subtotal += product.price * cartItems[itemId][size];
+                }
+            }
+        }
+        return subtotal;
+    }
+
+    const getTotal = () => {
+        return getSubtotal() + delivery_fee;
+    }
+    
+    // Function to get the flattened cart array (used for Cart.jsx and PlaceOrder.jsx)
+    const getCartItemsData = () => {
+        const cartData = [];
+        for(const itemId in cartItems){
+            const product = products.find(p => p._id === itemId);
+            if (product) {
+                for(const sizeKey in cartItems[itemId]){
+                    const quantity = cartItems[itemId][sizeKey];
+                    if(quantity > 0){
+                        cartData.push({
+                            ...product, // Include all product details
+                            size: sizeKey,
+                            quantity: quantity,
+                            totalPrice: product.price * quantity
+                        });
+                    }
+                }
+            }
+        }
+        return cartData;
+    }
 
     const value = {
         products: products,
@@ -98,7 +131,12 @@ const ShopContextProvider = (props) => {
         addToCart: addToCart,
         getCartCount: getCartCount,
         setCartItems: setCartItems,
-        updateQuantity: updateQuantity
+        updateQuantity: updateQuantity,
+        
+        // --- Added for Checkout ---
+        getSubtotal: getSubtotal,
+        getTotal: getTotal,
+        getCartItemsData: getCartItemsData,
     }
 
     return (

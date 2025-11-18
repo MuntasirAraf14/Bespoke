@@ -78,6 +78,8 @@ import razorpay_logo from './razorpay_logo.png'
 import stripe_logo from './stripe_logo.png'
 import cross_icon from './cross_icon.png'
 import receving_img from './receiving.png'
+import visa_card from './visa.png'
+import master_card from './master.png'
 
 
 export const assets = {
@@ -103,7 +105,9 @@ export const assets = {
     razorpay_logo,
     stripe_logo,
     cross_icon,
-    receving_img
+    receving_img,
+    visa_card,
+    master_card
     
 }
 
