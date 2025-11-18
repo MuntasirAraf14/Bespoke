@@ -33,7 +33,7 @@ const NewsletterBox = () => {
             {/* Button: Fixed width, prominent background */}
             <button 
                 type="submit" 
-                className='bg-black text-white px-6 py-3 font-semibold hover:bg-gray-800 transition-colors shrink-0'
+                className='bg-black text-white px-6 py-3  font-semibold hover:bg-gray-800 transition-colors shrink-0 '
             >
                 Subscribe
             </button>
