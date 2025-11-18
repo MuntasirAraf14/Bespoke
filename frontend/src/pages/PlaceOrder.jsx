@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
 import { assets } from "../assets/assets"; // Ensure assets are imported
 
+
 const PlaceOrder = () => {
   const { getCartCount, getSubtotal, getTotal, currency, delivery_fee } =
     useContext(ShopContext);
@@ -291,7 +292,7 @@ const PlaceOrder = () => {
             </div>
             {/* --- END MODIFIED PAYMENT SECTION --- */}
 
-            <button
+            <button onClick={()=>navigate('/order')}
               type="submit"
               className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
             >
