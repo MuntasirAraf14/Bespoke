@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
     cartData: {
         type : Object,
         default : {}
+    },
+    role: {
+        type: String,
+        default: "user"
     }
    
 },{minimize: false});
