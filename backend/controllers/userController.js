@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from 'bcrypt';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
+
 //Route for login
 
 const createToken = (id) => {
@@ -70,34 +71,27 @@ const registerUser = async (req, res) => {
 
 
 //Route for admin login
+//Route for admin login
+//Route for admin login
 const adminLogin = async (req, res) => {
     try{
         const {email, password} = req.body;
-        const user = await userModel.findOne({email});
-        if(!user){
-            return res.json({success: false, message: "User not found"});
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
 
-        if(isMatch){
-            if(user.role === "admin"){
-                const token = createToken(user._id);
-                res.json({success: true, token});
-            }
-            else{
-                res.json({success: false, message: "You are not authorized to access this"});
-            }
+
+
+        if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){
+            // THIS IS THE CRITICAL LINE - make sure it has { email }
+            const token = jwt.sign({ email }, process.env.JWT_SECRET, {expiresIn: '3d'});
+            res.json({success: true, token});
         }
         else{
-            res.json({success: false, message: "Invalid credentials"});
+            res.json({success: false, message: "You are not authorized to access this"});
         }
-        
     }catch(error){
         console.log(error)
         res.json({success: false, message:error.message});
     }
 }
-
 
 
 
