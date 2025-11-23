@@ -45,7 +45,7 @@ const Add = ({ token }) => {
       formData.append('category', category);
       formData.append('subCategory', subCategory);
       formData.append('sizes', JSON.stringify(sizes));
-      formData.append('bestSeller', bestSeller ? 'true' : 'false');
+      formData.append('bestseller', bestSeller ? 'true' : 'false');
 
       const response = await axios.post(
         backendURL + '/api/product/add',

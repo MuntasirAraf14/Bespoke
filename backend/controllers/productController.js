@@ -5,7 +5,7 @@ import fs from 'fs';
 // function for add product
 const addProduct = async (req, res) => {
     try {
-        const { name, description, price, category, subCategory, sizes, bestseller } = req.body;
+        const { name, description, price, category, subCategory, sizes, bestseller, bestSeller } = req.body;
 
         const image1 = req.files.image1 && req.files.image1[0];
         const image2 = req.files.image2 && req.files.image2[0];
@@ -24,13 +24,15 @@ const addProduct = async (req, res) => {
             })
         );
 
+        const isBestseller = (bestseller === "true" || bestSeller === "true") ? true : false;
+
         const productData = {
             name,
             description,
             category,
             price: Number(price),
             subCategory,
-            bestseller: bestseller === "true" ? true : false,
+            bestseller: isBestseller,
             sizes: JSON.parse(sizes),
             image: imagesUrl,
             date: Date.now()
