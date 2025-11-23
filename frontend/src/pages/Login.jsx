@@ -1,15 +1,71 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { ShopContext } from '../context/ShopContext.jsx';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 const Login = () => {
 
-  const [currentState, setCurrentState] = React.useState('Sign Up');
+  const [currentState, setCurrentState] = React.useState('Login');
+  const {token, setToken, backendURL} = React.useContext(ShopContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.form) {
+      setCurrentState(location.state.form);
+    }
+  }, [location.state]);
+
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    try{
+      if(currentState === 'Sign Up'){
+        const response = await axios.post(backendURL + '/api/user/register', {
+          name: name,
+          email: email,
+          password: password
+        });
+
+        if(response.data.success){
+          setToken(response.data.token);
+          localStorage.setItem('token', response.data.token);
+        }else{
+          toast.error(response.data.message);
+        }
+      }else{  
+        const response = await axios.post(backendURL + '/api/user/login', {
+          email: email,
+          password: password
+        });
+        if(response.data.success){
+          setToken(response.data.token);
+          localStorage.setItem('token', response.data.token);
+        }else{
+          toast.error(response.data.message);
+        }
+      }
+    }catch(error){
+      console.log(error);
+      toast.error('An error occurred. Please try again.');
+      
+
+    }
     // You can add your subscription logic here (e.g., API call)
     
   }
+
+  useEffect(() => {
+    if(token){
+      navigate('/');
+    }
+  }, [token]);
+
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-700'> 
@@ -17,11 +73,11 @@ const Login = () => {
           <p className='prata-regular text-3xl sm:py-3 lg:text-5xl'>{currentState}</p>
           <hr className='border-none h-[1.5px] w-8 bg-gray-900'/>
       </div>
-      {currentState === 'Login' ? '' : <input type="text" placeholder='Name' className='w-full px-4 py-3 border border-gray-800 ' required>
+      {currentState === 'Login' ? '' : <input onChange={(e)=> setName(e.target.value)} value={name} type="text" placeholder='Name' className='w-full px-4 py-3 border border-gray-800 ' required>
       </input> }
-      <input type="email" placeholder='Email' className='w-full px-4 py-3 border border-gray-800 ' required>
+      <input onChange={(e)=> setEmail(e.target.value)} value={email} type="email" placeholder='Email' className='w-full px-4 py-3 border border-gray-800 ' required>
       </input>
-      <input type="password" placeholder='password' className='w-full px-4 py-3 border border-gray-800 ' required>
+      <input onChange={(e)=> setPassword(e.target.value)} value={password} type="password" placeholder='password' className='w-full px-4 py-3 border border-gray-800 ' required>
       </input>
       <div className='w-full flex justify-between text-sm mt-[-8px]'>
         <p className='cursor-pointer'>Forgot Password?</p>

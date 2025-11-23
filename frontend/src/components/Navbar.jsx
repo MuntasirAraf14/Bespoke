@@ -1,18 +1,23 @@
-// components/Navbar.jsx (MODIFIED - Conditional Search Icon)
-
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import {assets} from '../assets/assets'
-import { NavLink, Link, useLocation } from 'react-router-dom' // Import useLocation 
-import {useState} from 'react'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext';
 
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
-  const { setShowSearch, getCartCount } = useContext(ShopContext);
+  const { setShowSearch, getCartCount, token, setToken, setCartItems } = useContext(ShopContext);
+  const navigate = useNavigate();
 
-  const location = useLocation(); // Get current location
-  const isCollectionPage = location.pathname.includes('/collection'); // Check if path includes /collection
+  const logout = () => {
+    navigate('/login', { state: { form: 'Login' } });
+    localStorage.removeItem('token');
+    setToken('');
+    setCartItems({});
+  }
+
+  const location = useLocation(); 
+  const isCollectionPage = location.pathname.includes('/collection'); 
 
   const getNavLinkClass = ({ isActive }) => 
     `p-2 px-4 rounded-full transition-all duration-200 uppercase text-sm font-medium 
@@ -22,14 +27,12 @@ const Navbar = () => {
      }`;
 
   return (
-    // Navbar Container
     <div className='flex items-center justify-between py-5 font-medium'>
       <Link to='/'>
         <img src={assets.icon_logo} alt="Logo" className='w-36' />
       </Link>
        
        <ul className='hidden sm:flex gap-4 text-sm'>
-        {/* Nav Links remain the same */}
         <NavLink to='/' className={getNavLinkClass}><p>HOME</p></NavLink>
         <NavLink to='/collection' className={getNavLinkClass}><p>COLLECTION</p></NavLink>
         <NavLink to='/about' className={getNavLinkClass}><p>ABOUT</p></NavLink>
@@ -38,7 +41,6 @@ const Navbar = () => {
 
        <div className='flex items-center gap-6'>
         
-        {/* --- MODIFICATION HERE: Conditional Search Icon --- */}
         {isCollectionPage && (
             <img 
                 onClick={()=> setShowSearch(true)}  
@@ -47,22 +49,19 @@ const Navbar = () => {
                 className='w-5 cursor-pointer hover:opacity-75 transition-opacity' 
             />
         )}
-        {/* --- END MODIFICATION --- */}
 
-
-        {/* Profile Dropdown */}
         <div className='group relative'>
-          <Link to='/Login'> <img src={assets.profile_icon} alt="User" className='w-5 cursor-pointer hover:opacity-75 transition-opacity' />
-          </Link>
-         
+          <img onClick={()=> token ? null : navigate('/login')} src={assets.profile_icon} alt="User" className='w-5 cursor-pointer hover:opacity-75 transition-opacity' />
+          
+          {/* Dropdown Menu */}
+          {token && 
           <div className='absolute top-10 right-0 w-32 bg-white shadow-xl rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50'>
               <p className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 rounded-t-md cursor-pointer'>My Profile</p>
-              <p className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer'>Orders</p>
-              <p className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 rounded-b-md cursor-pointer'>Logout</p>
-          </div>
+              <p onClick={()=> navigate('/order')} className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer'>Orders</p>
+              <p onClick={logout} className='px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 rounded-b-md cursor-pointer'>Logout</p>
+          </div>}
         </div>
         
-        {/* Cart Icon */}
         <Link to='/cart' className='relative'>
           <img src={assets.cart_icon} alt="Cart" className='w-5 min-w-5 hover:opacity-75 transition-opacity' />
           <div className='absolute right-[-7px] top-[-7px] text-white text-center text-[10px] w-4 h-4 bg-black rounded-full flex items-center justify-center'>
@@ -70,7 +69,6 @@ const Navbar = () => {
           </div>
         </Link>
         
-        {/* Mobile Menu Icon */}
         <img 
             onClick={()=> setVisible(true)} 
             src={assets.menu_icon} 
@@ -79,7 +77,6 @@ const Navbar = () => {
         />
        </div>
 
-        {/* Mobile Menu (unchanged) */}
         <div className={`fixed top-0 right-0 bottom-0 overflow-hidden bg-white z-[90] transition-all duration-300 ${visible ? 'w-full' : 'w-0'}`}>
           <div className='flex flex-col text-gray-600'>
             <div onClick={()=>setVisible(false)} className='flex items-center gap-4 p-5 cursor-pointer border-b'>

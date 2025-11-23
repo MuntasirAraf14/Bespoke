@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import productModel from '../models/productModel.js';
-import fs from 'fs'; // Import File System to delete files after upload
+import fs from 'fs';
 
 // function for add product
 const addProduct = async (req, res) => {
@@ -17,10 +17,9 @@ const addProduct = async (req, res) => {
         let imagesUrl = await Promise.all(
             images.map(async (item) => {
                 let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
-                // FIX: Delete the file from local 'uploads' folder after uploading to Cloudinary
                 fs.unlink(item.path, (err) => {
                     if (err) console.error(`Failed to delete local file: ${item.path}`, err);
-                }); 
+                });
                 return result.secure_url;
             })
         );
@@ -82,7 +81,6 @@ const removeProduct = async (req, res) => {
 // function for single product
 const singleProduct = async (req, res) => {
     try {
-        // FIX: Use req.body.productId (match what frontend sends)
         const { productId } = req.body;
         const product = await productModel.findById(productId);
         res.json({ success: true, product });

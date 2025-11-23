@@ -1,15 +1,20 @@
 import { createContext } from "react";
-import { products } from "../assets/assets";
 import React, { useEffect } from "react";   
 import { toast } from "react-toastify";
+import axios from "axios";
+
+
 
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
     const currency = '$';
     const delivery_fee = 10;
+    const backendURL = import.meta.env.VITE_BACKEND_URL 
     const [search, setSearch] = React.useState('');
     const [showSearch, setShowSearch] = React.useState(false);
+    const [products, setProducts] = React.useState([]);
+    const [token, setToken] = React.useState('');
     
     // 1. Initialize cartItems by checking localStorage first.
     const [cartItems, setCartItems] = React.useState(() => {
@@ -47,6 +52,21 @@ const ShopContextProvider = (props) => {
             newCartItems[itemId][size] = 1;
         }
         setCartItems(newCartItems);
+
+        if(token){
+            try{
+                const response = await axios.post(backendURL + '/api/cart/add', {itemId, size}, {
+                    headers: {
+                        token : token
+                    }
+                });
+                console.log(response.data);
+            }
+            catch(error){
+                console.log(error);
+                toast.error('Error adding to cart');
+            }
+        }
     }
 
     const updateQuantity = (itemId, size, quantity) => {
@@ -119,6 +139,34 @@ const ShopContextProvider = (props) => {
         return cartData;
     }
 
+    const getProductsData = async () => { 
+        try {
+            const response = await axios.get(`${backendURL}/api/product/list`);
+            console.log("API Response:", response.data);
+            if(response.data.success){
+                setProducts(response.data.products);
+                console.log("Products set:", response.data.products);
+            }else{
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.log("Error fetching products:", error);
+            toast.error('Error fetching products');
+        }
+    }
+
+    useEffect(() => {
+        getProductsData();
+    }, []);
+
+    useEffect(() => {
+        if(!token && localStorage.getItem('token')){
+            setToken(localStorage.getItem('token'));
+        }
+    }, [token]);
+
+
+
     const value = {
         products: products,
         currency: currency,
@@ -137,6 +185,9 @@ const ShopContextProvider = (props) => {
         getSubtotal: getSubtotal,
         getTotal: getTotal,
         getCartItemsData: getCartItemsData,
+        backendURL: backendURL,
+        token: token,
+        setToken: setToken
     }
 
     return (

@@ -51,6 +51,8 @@ const Collection = () => {
 
   }
 
+  
+
   const sortProducts = (sortBy) => {
     let productsCopy = filterProducts.slice();
     if (sortBy === 'Low to High') {
@@ -86,6 +88,8 @@ const Collection = () => {
   React.useEffect(() => {
     sortProducts(sortBy);
   }, [sortBy]);
+
+
 
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>

@@ -5,10 +5,12 @@ import { ShopContext } from "../context/ShopContext";
 import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
 import { assets } from "../assets/assets"; // Ensure assets are imported
+import axios from "axios";
+import { toast } from "react-toastify";
 
 
 const PlaceOrder = () => {
-  const { getCartCount, getSubtotal, getTotal, currency, delivery_fee } =
+  const { getCartCount, getSubtotal, getTotal, currency, delivery_fee, token, products, cartItems, setCartItems, backendURL } =
     useContext(ShopContext);
   const navigate = useNavigate();
 
@@ -42,28 +44,46 @@ const PlaceOrder = () => {
     setPaymentMethod(e.target.value);
   };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // If cart is empty
-  if (getCartCount() === 0) {
-    alert("Your cart is empty. Please add items before placing an order.");
-    return;
-  }
+    try {
+      let orderItems = [];
 
-  // Validate all address fields
-  for (let key in addressData) {
-    if (!addressData[key].trim()) {
-      alert("Please complete all delivery information fields.");
-      return;
+      for(const itemId in cartItems){
+        for(const size in cartItems[itemId]){
+          if(cartItems[itemId][size] > 0){
+            const itemInfo = structuredClone(products.find(product => product._id === itemId));
+            if(itemInfo){
+              itemInfo.size = size;
+              itemInfo.quantity = cartItems[itemId][size];
+              orderItems.push(itemInfo);
+            }
+          }
+        }
+      }
+
+      let orderData = {
+        address: addressData,
+        items: orderItems,
+        amount: getTotal()
+      }
+
+      if(paymentMethod === 'cod'){
+        const response = await axios.post(backendURL + '/api/order/place', orderData, {headers:{token}});
+        if(response.data.success){
+          setCartItems({});
+          navigate('/order');
+        }else{
+          toast.error(response.data.message);
+        }
+      }
+
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
     }
-  }
-
-  // Everything OK → proceed
-  console.log("Order submitted. Payment method:", paymentMethod);
-
-  navigate("/order"); // move here
-};
+  };
 
   const inputClass =
     "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black";
