@@ -8,10 +8,19 @@ import { assets } from "../assets/assets"; // Ensure assets are imported
 import axios from "axios";
 import { toast } from "react-toastify";
 
-
 const PlaceOrder = () => {
-  const { getCartCount, getSubtotal, getTotal, currency, delivery_fee, token, products, cartItems, setCartItems, backendURL } =
-    useContext(ShopContext);
+  const {
+    getCartCount,
+    getSubtotal,
+    getTotal,
+    currency,
+    delivery_fee,
+    token,
+    products,
+    cartItems,
+    setCartItems,
+    backendURL,
+  } = useContext(ShopContext);
   const navigate = useNavigate();
 
   // ... (State and Calculation definitions remain the same) ...
@@ -50,11 +59,13 @@ const PlaceOrder = () => {
     try {
       let orderItems = [];
 
-      for(const itemId in cartItems){
-        for(const size in cartItems[itemId]){
-          if(cartItems[itemId][size] > 0){
-            const itemInfo = structuredClone(products.find(product => product._id === itemId));
-            if(itemInfo){
+      for (const itemId in cartItems) {
+        for (const size in cartItems[itemId]) {
+          if (cartItems[itemId][size] > 0) {
+            const itemInfo = structuredClone(
+              products.find((product) => product._id === itemId)
+            );
+            if (itemInfo) {
               itemInfo.size = size;
               itemInfo.quantity = cartItems[itemId][size];
               orderItems.push(itemInfo);
@@ -66,19 +77,34 @@ const PlaceOrder = () => {
       let orderData = {
         address: addressData,
         items: orderItems,
-        amount: getTotal()
-      }
+        amount: getTotal(),
+      };
 
-      if(paymentMethod === 'cod'){
-        const response = await axios.post(backendURL + '/api/order/place', orderData, {headers:{token}});
-        if(response.data.success){
+      if (paymentMethod === "cod") {
+        const response = await axios.post(
+          backendURL + "/api/order/place",
+          orderData,
+          { headers: { token } }
+        );
+        if (response.data.success) {
           setCartItems({});
-          navigate('/order');
-        }else{
+          navigate("/order");
+        } else {
+          toast.error(response.data.message);
+        }
+      } else if (paymentMethod === "sslcommerz") {
+        const response = await axios.post(
+          backendURL + "/api/order/sslcommerz",
+          orderData,
+          { headers: { token } }
+        );
+        if (response.data.success) {
+          setCartItems({});
+          window.location.replace(response.data.session_url);
+        } else {
           toast.error(response.data.message);
         }
       }
-
     } catch (error) {
       console.log(error);
       toast.error(error.message);
@@ -277,7 +303,7 @@ const PlaceOrder = () => {
               <label
                 htmlFor="card"
                 className={`flex justify-between items-center p-3 rounded-md bg-white border cursor-pointer transition-all ${
-                  paymentMethod === "card"
+                  paymentMethod === "sslcommerz"
                     ? "border-black ring-1 ring-black shadow-md"
                     : "border-gray-300 hover:border-gray-500"
                 }`}
@@ -287,9 +313,9 @@ const PlaceOrder = () => {
                     type="radio"
                     name="paymentMethod"
                     id="card"
-                    value="card"
+                    value="sslcommerz"
                     required
-                    checked={paymentMethod === "card"}
+                    checked={paymentMethod === "sslcommerz"}
                     className="w-4 h-4 text-black focus:ring-black"
                   />
                   <span className="text-gray-800 font-medium">
@@ -315,13 +341,13 @@ const PlaceOrder = () => {
             </div>
             {/* --- END MODIFIED PAYMENT SECTION --- */}
 
-           <button
-  type="submit"
-  className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
->
-  CONFIRM AND PAY ({currency}{total.toFixed(2)})
-</button>
-
+            <button
+              type="submit"
+              className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+            >
+              CONFIRM AND PAY ({currency}
+              {total.toFixed(2)})
+            </button>
           </div>
         </div>
       </div>
