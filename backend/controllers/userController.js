@@ -119,4 +119,45 @@ const googleLogin = async (req, res) => {
     }
 }
 
-export { loginUser, registerUser, adminLogin, googleLogin };
+
+
+// Get User Profile
+const getProfile = async (req, res) => {
+    try {
+        const userId = req.userId || req.body.userId; // Check both
+        console.log('getProfile - userId:', userId);
+        console.log('getProfile - req.userId:', req.userId);
+        console.log('getProfile - req.body.userId:', req.body.userId);
+        
+        if (!userId) {
+            return res.json({ success: false, message: "User ID not found" });
+        }
+        
+        const user = await userModel.findById(userId).select('-password');
+        console.log('getProfile - user found:', user);
+        
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+        
+        res.json({ success: true, user });
+    } catch (error) {
+        console.log('getProfile - error:', error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Update User Profile
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.userId || req.body.userId;
+        const { phone, address } = req.body;
+        const user = await userModel.findByIdAndUpdate(userId, { phone, address }, { new: true }).select('-password');
+        res.json({ success: true, message: "Profile updated successfully", user });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { loginUser, registerUser, adminLogin, googleLogin, getProfile, updateProfile };
