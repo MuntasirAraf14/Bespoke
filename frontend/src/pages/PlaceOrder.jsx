@@ -57,6 +57,12 @@ const PlaceOrder = () => {
     e.preventDefault();
 
     try {
+      if (!token) {
+        toast.error("Please login to place order");
+        navigate("/login", { state: { from: "/place-order" } });
+        return;
+      }
+
       let orderItems = [];
 
       for (const itemId in cartItems) {
@@ -354,5 +360,4 @@ const PlaceOrder = () => {
     </form>
   );
 };
-
 export default PlaceOrder;

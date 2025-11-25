@@ -79,9 +79,13 @@ const Login = () => {
 
   useEffect(() => {
     if (token) {
-      navigate("/");
+      if (location.state?.from) {
+        navigate(location.state.from);
+      } else {
+        navigate("/");
+      }
     }
-  }, [token]);
+  }, [token, location.state, navigate]);
 
   return (
     <form

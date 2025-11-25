@@ -1,5 +1,7 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Placing orders using COD Method
 const placeOrder = async (req, res) => {
