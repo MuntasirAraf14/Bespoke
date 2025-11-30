@@ -40,6 +40,12 @@ const productSchema = new mongoose.Schema({
 
 })
 
+// Add indexes for better performance
+productSchema.index({ name: 'text' }); // Text index for search
+productSchema.index({ category: 1 });
+productSchema.index({ subCategory: 1 });
+productSchema.index({ price: 1 });
+
 const productModel = mongoose.models.product || mongoose.model('Product', productSchema);
 
 export default productModel;
