@@ -1,8 +1,7 @@
 import React from 'react'
 import axios from 'axios';
-import { backendURL } from '../src/App.jsx';
 import { toast } from 'react-toastify';
-import { currency } from '../src/App.jsx';
+import { backendURL, currency } from '../src/config';
 
 const List = ({ token }) => {
 

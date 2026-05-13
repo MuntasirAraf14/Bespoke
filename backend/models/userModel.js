@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -23,6 +24,10 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
+        default: ""
+    },
+    image: {
+        type: String, // Stores Cloudinary URL
         default: ""
     },
     address: {

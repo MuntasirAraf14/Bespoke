@@ -1,5 +1,5 @@
 import React from 'react'
-import { backendURL } from '../src/App';
+import { backendURL } from '../src/config';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 

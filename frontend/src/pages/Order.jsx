@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useContext } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { ShopContext } from '../context/shopContext'
 import Title from '../components/Title'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 
 const Order = () => {
@@ -10,7 +11,7 @@ const Order = () => {
   const { backendURL, token, currency } = useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
 
-  const loadOrderData = async () => {
+  const loadOrderData = useCallback(async () => {
     try {
       if(!token){
         return null;
@@ -18,27 +19,29 @@ const Order = () => {
 
       const response = await axios.post(backendURL + '/api/order/userorders', {}, {headers:{token}});
       if(response.data.success){
-        let allOrdersItem = [];
-        response.data.orders.map((order)=>{
-          order.items.map((item)=>{
-            item['status'] = order.status;
-            item['payment'] = order.payment;
-            item['paymentMethod'] = order.paymentMethod;
-            item['date'] = order.date;
-            allOrdersItem.push(item);
+        const allOrdersItem = [];
+        response.data.orders.forEach((order)=>{
+          order.items.forEach((item)=>{
+            allOrdersItem.push({
+              ...item,
+              status: order.status,
+              payment: order.payment,
+              paymentMethod: order.paymentMethod,
+              date: order.date,
+            });
           })
         })
         setOrderData(allOrdersItem.reverse());
       }
       
     } catch (error) {
-      
+      toast.error(error.message);
     }
-  }
+  }, [backendURL, token])
 
   useEffect(()=>{
     loadOrderData();
-  },[token])
+  },[loadOrderData])
 
   return (
     <div className='border-t pt-16'>

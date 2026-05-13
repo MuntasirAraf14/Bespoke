@@ -1,0 +1,65 @@
+
+> backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+Environment variables validated.
+Storage connected. Database unavailable.
+Server running on port 4000
+::1 - - [12/May/2026:16:28:11 +0000] "GET /health HTTP/1.1" 200 79 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:16:28:11 +0000] "POST /api/user/admin HTTP/1.1" 200 196 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:16:28:33 +0000] "GET /health HTTP/1.1" 200 79 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:16:28:33 +0000] "POST /api/user/admin HTTP/1.1" 200 196 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+TokenExpiredError: jwt expired
+    at E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:190:21
+    at getSecret (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:97:14)
+    at module.exports [as verify] (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:101:10)
+    at adminAuth (file:///E:/New%20folder%20(3)/Bespoke/backend/middleware/adminAuth.js:13:34)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at next (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:117:3)
+    at handle (E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:295:15 {
+  expiredAt: 2026-02-18T17:07:19.000Z
+}
+::1 - - [12/May/2026:16:48:06 +0000] "POST /api/product/add HTTP/1.1" 401 54 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+TokenExpiredError: jwt expired
+    at E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:190:21
+    at getSecret (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:97:14)
+    at module.exports [as verify] (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:101:10)
+    at adminAuth (file:///E:/New%20folder%20(3)/Bespoke/backend/middleware/adminAuth.js:13:34)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at next (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:117:3)
+    at handle (E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:295:15 {
+  expiredAt: 2026-02-18T17:07:19.000Z
+}
+::1 - - [12/May/2026:16:48:14 +0000] "POST /api/product/add HTTP/1.1" 401 54 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+TokenExpiredError: jwt expired
+    at E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:190:21
+    at getSecret (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:97:14)
+    at module.exports [as verify] (E:\New folder (3)\Bespoke\backend\node_modules\jsonwebtoken\verify.js:101:10)
+    at adminAuth (file:///E:/New%20folder%20(3)/Bespoke/backend/middleware/adminAuth.js:13:34)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at next (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\route.js:117:3)
+    at handle (E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (E:\New folder (3)\Bespoke\backend\node_modules\router\lib\layer.js:152:17)
+    at E:\New folder (3)\Bespoke\backend\node_modules\router\index.js:295:15 {
+  expiredAt: 2026-02-18T17:07:19.000Z
+}
+::1 - - [12/May/2026:17:33:26 +0000] "POST /api/product/add HTTP/1.1" 401 54 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:33:46 +0000] "POST /api/user/admin HTTP/1.1" 200 196 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:34:07 +0000] "POST /api/product/add HTTP/1.1" 503 89 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:37:45 +0000] "POST /api/product/add HTTP/1.1" 503 89 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:39:57 +0000] "POST /api/product/add HTTP/1.1" 503 89 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:40:38 +0000] "GET /health HTTP/1.1" 200 79 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:17:40:55 +0000] "GET /health HTTP/1.1" 200 79 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:17:43:03 +0000] "POST /api/user/admin HTTP/1.1" 200 196 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:43:32 +0000] "POST /api/product/add HTTP/1.1" 503 89 "http://localhost:5174/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0"
+::1 - - [12/May/2026:17:44:34 +0000] "GET /health HTTP/1.1" 200 79 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+::1 - - [12/May/2026:17:45:42 +0000] "GET /health HTTP/1.1" 200 79 "-" "axios/1.13.2"

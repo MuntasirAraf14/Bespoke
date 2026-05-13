@@ -124,10 +124,8 @@ const googleLogin = async (req, res) => {
 // Get User Profile
 const getProfile = async (req, res) => {
     try {
-        const userId = req.userId || req.body.userId; // Check both
+        const userId = req.userId;
         console.log('getProfile - userId:', userId);
-        console.log('getProfile - req.userId:', req.userId);
-        console.log('getProfile - req.body.userId:', req.body.userId);
         
         if (!userId) {
             return res.json({ success: false, message: "User ID not found" });
@@ -150,9 +148,33 @@ const getProfile = async (req, res) => {
 // Update User Profile
 const updateProfile = async (req, res) => {
     try {
-        const userId = req.userId || req.body.userId;
+        const userId = req.userId;
         const { phone, address } = req.body;
-        const user = await userModel.findByIdAndUpdate(userId, { phone, address }, { new: true }).select('-password');
+        const imageFile = req.file;
+
+        let updateData = { phone, address };
+
+        if (imageFile) {
+            // Upload image to Cloudinary
+            const cloudinary = await import("cloudinary");
+            const imageUpload = await cloudinary.v2.uploader.upload(imageFile.path, { 
+                resource_type: "image",
+                quality: "auto:best", // Prioritize quality
+                fetch_format: "auto"
+            });
+            updateData.image = imageUpload.secure_url;
+        }
+
+        // If address comes as a string (from FormData), parse it
+        if (typeof address === 'string') {
+            try {
+                updateData.address = JSON.parse(address);
+            } catch (e) {
+                console.log("Error parsing address JSON:", e);
+            }
+        }
+
+        const user = await userModel.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
         res.json({ success: true, message: "Profile updated successfully", user });
     } catch (error) {
         console.log(error);

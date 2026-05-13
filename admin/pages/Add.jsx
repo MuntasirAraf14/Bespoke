@@ -2,7 +2,7 @@ import React from 'react'
 import { assets } from '../src/assets/assets'
 import axios from 'axios';
 
-import { backendURL } from '../src/App.jsx';
+import { backendURL } from '../src/config';
 import {toast} from 'react-toastify';
 
 

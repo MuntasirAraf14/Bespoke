@@ -9,8 +9,11 @@ const orderSchema = new mongoose.Schema({
     paymentMethod: { type: String, required: true },
     payment: { type: Boolean, required: true, default: false },
     date: { type: Number, required: true },
-    transactionId: { type: String, default: null }
+    transactionId: { type: String, default: null },
+    note: { type: String, default: '' } // Added for custom tailoring/order notes
 })
+
+orderSchema.index({ userId: 1 });
 
 const orderModel = mongoose.models.order || mongoose.model('order', orderSchema);
 

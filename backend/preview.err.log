@@ -1,0 +1,8 @@
+MongoDB Connection Failed: Error: querySrv ENOTFOUND _mongodb._tcp.cluster0.ea6rp0h.mongodb.net
+    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:294:17) {
+  errno: undefined,
+  code: 'ENOTFOUND',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.cluster0.ea6rp0h.mongodb.net'
+}
+Starting without MongoDB because ALLOW_DB_FAILURE=true.

@@ -3,37 +3,26 @@
 import React, { useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
-import { ShopContext } from "../context/ShopContext";
-import Title from "../components/Title";
-import ProductItem from "../components/ProductItem";
+import { ShopContext } from "../context/shopContext";
 import { assets } from "../assets/assets";
 import RelatedProducts from "../components/RelatedProducts";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import SizeGuide from "../components/SizeGuide";
 
 const Product = () => {
   const { productId } = useParams();
   const { products, currency, addToCart } = useContext(ShopContext);
-  const [productData, setProductData] = React.useState(false); // Use null instead of false
+  const productData = React.useMemo(
+    () => products.find((item) => item._id === productId),
+    [productId, products],
+  );
   const [image, setImage] = React.useState("");
   const [size, setSize] = React.useState("");
+  const [showSizeGuide, setShowSizeGuide] = React.useState(false);
 
-  // Use .find() for an efficient search
-  const fetchProductData = async () => {
-    products.map((item) => {
-      if (item._id === productId) {
-        setProductData(item);
-        setImage(item.image[0]);
-        return null;
-      }
-    });
-  };
-
-  // Add 'products' to the dependency array.
-  // Even though products is static, this is a robust practice that prevents
-  // bugs if you ever switch to fetching data from an API.
   React.useEffect(() => {
-    fetchProductData();
-  }, [productId, products]);
+    setImage(productData?.image?.[0] || "");
+  }, [productData]);
 
   return productData ? (
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100">
@@ -84,7 +73,15 @@ const Product = () => {
             {productData.description}
           </p>
           <div className="flex flex-col gap-4 my-8">
-            <p>Select Size</p>
+            <div className="flex justify-between items-center">
+              <p>Select Size</p>
+              <button
+                onClick={() => setShowSizeGuide(true)}
+                className="text-sm text-gray-500 hover:text-black underline"
+              >
+                Size Guide
+              </button>
+            </div>
             <div className="flex gap-2">
               {productData.sizes.map((item, index) => (
                 <button
@@ -127,6 +124,10 @@ const Product = () => {
       <RelatedProducts
         category={productData.category}
         subCategory={productData.subCategory}
+      />
+      <SizeGuide
+        isOpen={showSizeGuide}
+        onClose={() => setShowSizeGuide(false)}
       />
     </div>
   ) : (

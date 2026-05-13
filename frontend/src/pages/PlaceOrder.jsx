@@ -1,16 +1,14 @@
 // pages/PlaceOrder.jsx (UPDATED PAYMENT SECTION)
 
 import React, { useContext, useState } from "react";
-import { ShopContext } from "../context/ShopContext";
+import { ShopContext } from "../context/shopContext";
 import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
-import { assets } from "../assets/assets"; // Ensure assets are imported
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const PlaceOrder = () => {
   const {
-    getCartCount,
     getSubtotal,
     getTotal,
     currency,
@@ -20,11 +18,11 @@ const PlaceOrder = () => {
     cartItems,
     setCartItems,
     backendURL,
+    setDeliveryFee, // Added setDeliveryFee here
   } = useContext(ShopContext);
   const navigate = useNavigate();
 
   // ... (State and Calculation definitions remain the same) ...
-  const cartItemCount = getCartCount();
   const subtotal = getSubtotal();
   const total = getTotal();
 
@@ -43,6 +41,8 @@ const PlaceOrder = () => {
 
   // --- NEW STATE FOR PAYMENT ---
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [orderNote, setOrderNote] = useState(""); // State for tailoring note
+  const [isSubmitting, setIsSubmitting] = useState(false); // Loading state
   // ----------------------------
 
   const handleAddressChange = (e) => {
@@ -69,7 +69,7 @@ const PlaceOrder = () => {
         for (const size in cartItems[itemId]) {
           if (cartItems[itemId][size] > 0) {
             const itemInfo = structuredClone(
-              products.find((product) => product._id === itemId)
+              products.find((product) => product._id === itemId),
             );
             if (itemInfo) {
               itemInfo.size = size;
@@ -80,17 +80,19 @@ const PlaceOrder = () => {
         }
       }
 
+      setIsSubmitting(true);
+
       let orderData = {
         address: addressData,
         items: orderItems,
-        amount: getTotal(),
+        note: orderNote, // Pass note to backend
       };
 
       if (paymentMethod === "cod") {
         const response = await axios.post(
           backendURL + "/api/order/place",
           orderData,
-          { headers: { token } }
+          { headers: { token } },
         );
         if (response.data.success) {
           setCartItems({});
@@ -102,7 +104,7 @@ const PlaceOrder = () => {
         const response = await axios.post(
           backendURL + "/api/order/sslcommerz",
           orderData,
-          { headers: { token } }
+          { headers: { token } },
         );
         if (response.data.success) {
           setCartItems({});
@@ -114,8 +116,24 @@ const PlaceOrder = () => {
     } catch (error) {
       console.log(error);
       toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // --- Location Based Shipping Logic ---
+  React.useEffect(() => {
+    // Simple check: If 'Dhaka' is mentioned in city or state, fee is 60. Else 120.
+    const isInsideDhaka =
+      addressData.city.toLowerCase().includes("dhaka") ||
+      addressData.state.toLowerCase().includes("dhaka");
+
+    if (isInsideDhaka) {
+      setDeliveryFee(60);
+    } else {
+      setDeliveryFee(120);
+    }
+  }, [addressData.city, addressData.state, setDeliveryFee]);
 
   const inputClass =
     "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black";
@@ -224,6 +242,18 @@ const PlaceOrder = () => {
               className={inputClass}
             />
           </div>
+
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-6">
+              Custom Tailoring / Note
+            </h2>
+            <textarea
+              className={inputClass + " h-32 resize-none"}
+              placeholder="Add special instructions for size, fit, or delivery..."
+              value={orderNote}
+              onChange={(e) => setOrderNote(e.target.value)}
+            ></textarea>
+          </div>
         </div>
 
         {/* 2. Order Summary and Payment (Right Side) */}
@@ -293,66 +323,46 @@ const PlaceOrder = () => {
 
               {/* 2. Pay by Bkash */}
 
-              {/*<label 
-                                htmlFor='bkash' 
-                                className={`flex justify-between items-center p-3 rounded-md bg-white border cursor-pointer transition-all ${paymentMethod === 'bkash' ? 'border-black ring-1 ring-black shadow-md' : 'border-gray-300 hover:border-gray-500'}`}
-                            >
-                                <div className='flex items-center gap-3'>
-                                    <input type='radio' name='paymentMethod' id='bkash' value='bkash' required checked={paymentMethod === 'bkash'} className='w-4 h-4 text-black focus:ring-black' />
-                                    <span className='text-gray-800 font-medium'>Pay by Bkash</span>
-                                </div>
-                                <img src={assets.bkash_logo} alt='Bkash Logo' className='w-12 h-auto'/>
-                            </label>
-                            */}
-
-              {/* 3. Pay by Credit/Debit Card */}
+              {/* 2. Pay by Mobile Wallets (bKash / Nagad) */}
               <label
-                htmlFor="card"
-                className={`flex justify-between items-center p-3 rounded-md bg-white border cursor-pointer transition-all ${
-                  paymentMethod === "sslcommerz"
-                    ? "border-black ring-1 ring-black shadow-md"
-                    : "border-gray-300 hover:border-gray-500"
-                }`}
+                htmlFor="sslcommerz"
+                className={`flex justify-between items-center p-3 rounded-md bg-white border cursor-pointer transition-all ${paymentMethod === "sslcommerz" ? "border-black ring-1 ring-black shadow-md" : "border-gray-300 hover:border-gray-500"}`}
               >
                 <div className="flex items-center gap-3">
                   <input
                     type="radio"
                     name="paymentMethod"
-                    id="card"
+                    id="sslcommerz"
                     value="sslcommerz"
                     required
                     checked={paymentMethod === "sslcommerz"}
                     className="w-4 h-4 text-black focus:ring-black"
                   />
                   <span className="text-gray-800 font-medium">
-                    Credit/Debit Card
+                    Mobile Payment (bKash/Nagad)
                   </span>
                 </div>
-
-                {/* --- FIX: Grouping and Responsive Image Sizing --- */}
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <img
-                    src={assets.visa_card}
-                    alt="Visa Card Logo"
-                    className="w-8 sm:w-10 h-auto" // Use responsive utility widths
-                  />
-                  <img
-                    src={assets.master_card}
-                    alt="MasterCard Logo"
-                    className="w-8 sm:w-10 h-auto" // Use responsive utility widths
-                  />
+                {/* We use assets for logos or text fallback if assets missing. Assuming generic representation for now */}
+                <div className="flex gap-2">
+                  <span className="text-xs bg-pink-600 text-white px-2 py-1 rounded">
+                    bKash
+                  </span>
+                  <span className="text-xs bg-orange-600 text-white px-2 py-1 rounded">
+                    Nagad
+                  </span>
                 </div>
-                {/* --- END FIX --- */}
               </label>
             </div>
             {/* --- END MODIFIED PAYMENT SECTION --- */}
 
             <button
               type="submit"
-              className="mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+              disabled={isSubmitting}
+              className={`mt-8 w-full bg-black text-white px-6 py-3 rounded-lg font-semibold transition-colors ${isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-800"}`}
             >
-              CONFIRM AND PAY ({currency}
-              {total.toFixed(2)})
+              {isSubmitting
+                ? "PROCESSING..."
+                : `CONFIRM AND PAY (${currency}${total.toFixed(2)})`}
             </button>
           </div>
         </div>

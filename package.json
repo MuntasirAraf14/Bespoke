@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:frontend": "npm --prefix frontend run build",
+    "build:admin": "npm --prefix admin run build",
+    "build:pages": "npm run build:frontend && npm run build:admin && node scripts/merge-pages.js",
+    "deploy:pages": "npm run build:pages && npx gh-pages -d frontend/dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}

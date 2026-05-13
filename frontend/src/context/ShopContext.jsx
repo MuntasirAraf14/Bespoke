@@ -1,18 +1,17 @@
-import { createContext } from "react";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-
-export const ShopContext = createContext();
+import { ShopContext } from "./shopContext";
 
 const ShopContextProvider = (props) => {
   const currency = "$";
-  const delivery_fee = 10;
+  // const delivery_fee = 10; // Removed constant, now using state below
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [search, setSearch] = React.useState("");
   const [showSearch, setShowSearch] = React.useState(false);
   const [products, setProducts] = React.useState([]);
-  const [token, setToken] = React.useState("");
+  const [token, setToken] = React.useState(() => localStorage.getItem("token") || "");
+  const [delivery_fee, setDeliveryFee] = React.useState(10); // Changed to state for dynamic updates
 
   // 1. Initialize cartItems by checking localStorage first.
   const [cartItems, setCartItems] = React.useState(() => {
@@ -50,6 +49,19 @@ const ShopContextProvider = (props) => {
       newCartItems[itemId][size] = 1;
     }
     setCartItems(newCartItems);
+
+    if (token) {
+      try {
+        await axios.post(
+          backendURL + "/api/cart/add",
+          { productId: itemId, size },
+          { headers: { token } },
+        );
+      } catch (error) {
+        console.log(error);
+        toast.error(error.message);
+      }
+    }
   };
 
   const updateQuantity = async (itemId, size, quantity) => {
@@ -74,12 +86,12 @@ const ShopContextProvider = (props) => {
       try {
         const response = await axios.post(
           backendURL + "/api/cart/update",
-          { itemId, size, quantity },
+          { productId: itemId, size, quantity },
           {
             headers: {
               token: token,
             },
-          }
+          },
         );
         console.log(response.data);
       } catch (error) {
@@ -121,8 +133,11 @@ const ShopContextProvider = (props) => {
   // Function to get the flattened cart array (used for Cart.jsx and PlaceOrder.jsx)
   const getCartItemsData = () => {
     const cartData = [];
+    // Create a map for faster lookup
+    const productMap = new Map(products.map((p) => [p._id, p]));
+
     for (const itemId in cartItems) {
-      const product = products.find((p) => p._id === itemId);
+      const product = productMap.get(itemId);
       if (product) {
         for (const sizeKey in cartItems[itemId]) {
           const quantity = cartItems[itemId][sizeKey];
@@ -140,7 +155,7 @@ const ShopContextProvider = (props) => {
     return cartData;
   };
 
-  const getProductsData = async () => {
+  const getProductsData = useCallback(async () => {
     try {
       const response = await axios.get(`${backendURL}/api/product/list`);
       console.log("API Response:", response.data);
@@ -154,18 +169,18 @@ const ShopContextProvider = (props) => {
       console.log("Error fetching products:", error);
       toast.error("Error fetching products");
     }
-  };
+  }, [backendURL]);
 
-  const getUserCart = async (token) => {
+  const getUserCart = useCallback(async (userToken) => {
     try {
-      const response = await axios.post(backendURL + "/api/cart/get", {
+      const response = await axios.get(backendURL + "/api/cart/get", {
         headers: {
-          token: token,
+          token: userToken,
         },
       });
       console.log("API Response:", response.data);
       if (response.data.success) {
-        setCartItems(response.data.cart);
+        setCartItems(response.data.cartData);
       } else {
         toast.error(response.data.message);
       }
@@ -173,23 +188,23 @@ const ShopContextProvider = (props) => {
       console.log(error);
       toast.error("Error fetching cart");
     }
-  };
+  }, [backendURL]);
 
   useEffect(() => {
     getProductsData();
-  }, []);
+  }, [getProductsData]);
 
   useEffect(() => {
-    if (!token && localStorage.getItem("token")) {
-      setToken(localStorage.getItem("token"));
-      getUserCart(localStorage.getItem("token"));
+    if (token) {
+      getUserCart(token);
     }
-  }, [token]);
+  }, [getUserCart, token]);
 
   const value = {
     products: products,
     currency: currency,
     delivery_fee: delivery_fee,
+    setDeliveryFee: setDeliveryFee, // Exposed setter
     search: search,
     setSearch: setSearch,
     showSearch: showSearch,

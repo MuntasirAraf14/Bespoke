@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
+import { sendError } from "../utils/http.js";
 
 export const authUser = async (req, res, next) => {
 
     const { token } = req.headers;
 
     if (!token) {
-        return res.json({ success: false, message: "Unauthorized" });
+        return sendError(res, 401, "Unauthorized");
     }
 
     try {
@@ -16,7 +17,7 @@ export const authUser = async (req, res, next) => {
         next();
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message });
+        return sendError(res, 401, "Invalid or expired token");
     }
 
 }

@@ -1,21 +1,15 @@
 import React, { useEffect } from "react";
-import { ShopContext } from "../context/ShopContext.jsx";
+import { ShopContext } from "../context/shopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
-  const [currentState, setCurrentState] = React.useState("Login");
-  const { token, setToken, backendURL } = React.useContext(ShopContext);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    if (location.state?.form) {
-      setCurrentState(location.state.form);
-    }
-  }, [location.state]);
+  const [currentState, setCurrentState] = React.useState(location.state?.form || "Login");
+  const { token, setToken, backendURL } = React.useContext(ShopContext);
 
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { ShopContext } from "../context/ShopContext";
+import React, { useMemo, useContext } from "react";
+import { ShopContext } from "../context/shopContext";
 import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import { Link } from "react-router-dom";
@@ -9,11 +9,30 @@ const Cart = () => {
   const { products, currency, cartItems, updateQuantity, delivery_fee } =
     useContext(ShopContext);
 
-  const [cartData, setCartData] = useState([]);
-
   // --- Helper function to find product details by ID ---
   const getProductDetails = (id) =>
     products.find((product) => product._id === id);
+
+  const cartData = useMemo(() => {
+    if (products.length === 0) {
+      return [];
+    }
+
+    const tempData = [];
+    for (const itemId in cartItems) {
+      for (const sizeKey in cartItems[itemId]) {
+        const quantity = cartItems[itemId][sizeKey];
+        if (quantity > 0) {
+          tempData.push({
+            id: itemId,
+            size: sizeKey,
+            quantity: quantity,
+          });
+        }
+      }
+    }
+    return tempData;
+  }, [cartItems, products]);
 
   // --- Helper function to calculate Subtotal ---
   const calculateSubtotal = () => {
@@ -29,29 +48,6 @@ const Cart = () => {
 
   const subtotal = calculateSubtotal();
   const total = subtotal + delivery_fee;
-
-  // --- FIX 1: Flattening Cart Data and Dependency Array ---
-  useEffect(() => {
-    if (products.length > 0) {
-      const tempData = [];
-
-      // Iterate over item IDs
-      for (const itemId in cartItems) {
-        // Iterate over sizes for that item ID
-        for (const sizeKey in cartItems[itemId]) {
-          const quantity = cartItems[itemId][sizeKey];
-          if (quantity > 0) {
-            tempData.push({
-              id: itemId, // Correctly using the itemId as 'id'
-              size: sizeKey,
-              quantity: quantity,
-            });
-          }
-        }
-      }
-      setCartData(tempData);
-    }
-  }, [cartItems, products]); // Dependency array only needs cartItems now (products is static)
 
   // --- FIX 2: Controlled Input Handler for Quantity ---
   const handleQuantityChange = (itemId, size, newQuantity) => {
@@ -88,7 +84,7 @@ const Cart = () => {
       <div className="flex flex-col lg:flex-row gap-10">
         {/* 1. Cart Items List (Left Side) */}
         <div className="lg:w-3/5">
-          {cartData.map((item, index) => {
+          {cartData.map((item) => {
             const productData = getProductDetails(item.id);
             if (!productData) return null; // Safety check
 
