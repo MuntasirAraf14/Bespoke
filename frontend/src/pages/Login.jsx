@@ -9,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentState, setCurrentState] = React.useState(location.state?.form || "Login");
-  const { token, setToken, backendURL } = React.useContext(ShopContext);
+  const { token, setToken, backendURL, tokenStorageKey } = React.useContext(ShopContext);
 
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -27,7 +27,7 @@ const Login = () => {
 
         if (response.data.success) {
           setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
+          localStorage.setItem(tokenStorageKey, response.data.token);
         } else {
           toast.error(response.data.message);
         }
@@ -38,7 +38,7 @@ const Login = () => {
         });
         if (response.data.success) {
           setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
+          localStorage.setItem(tokenStorageKey, response.data.token);
         } else {
           toast.error(response.data.message);
         }
@@ -57,7 +57,7 @@ const Login = () => {
       });
       if (response.data.success) {
         setToken(response.data.token);
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem(tokenStorageKey, response.data.token);
       } else {
         toast.error(response.data.message);
       }

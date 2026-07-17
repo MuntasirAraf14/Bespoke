@@ -123,16 +123,14 @@ const PlaceOrder = () => {
 
   // --- Location Based Shipping Logic ---
   React.useEffect(() => {
-    // Simple check: If 'Dhaka' is mentioned in city or state, fee is 60. Else 120.
+    if (!addressData.city && !addressData.state) {
+      setDeliveryFee(0);
+      return;
+    }
     const isInsideDhaka =
       addressData.city.toLowerCase().includes("dhaka") ||
       addressData.state.toLowerCase().includes("dhaka");
-
-    if (isInsideDhaka) {
-      setDeliveryFee(60);
-    } else {
-      setDeliveryFee(120);
-    }
+    setDeliveryFee(isInsideDhaka ? 60 : 120);
   }, [addressData.city, addressData.state, setDeliveryFee]);
 
   const inputClass =
@@ -275,16 +273,20 @@ const PlaceOrder = () => {
               <div className="flex justify-between">
                 <span>Delivery Fee:</span>
                 <span>
-                  {currency}
-                  {delivery_fee.toFixed(2)}
+                  {delivery_fee === 0
+                    ? <span className="text-sm text-gray-400 italic">Enter city to calculate</span>
+                    : `${currency}${delivery_fee.toFixed(2)}`
+                  }
                 </span>
               </div>
               <hr className="my-3 border-gray-300" />
               <div className="flex justify-between text-xl font-bold text-black">
                 <span>Total:</span>
                 <span>
-                  {currency}
-                  {total.toFixed(2)}
+                  {delivery_fee === 0
+                    ? `${currency}${subtotal.toFixed(2)}`
+                    : `${currency}${total.toFixed(2)}`
+                  }
                 </span>
               </div>
             </div>
@@ -362,7 +364,10 @@ const PlaceOrder = () => {
             >
               {isSubmitting
                 ? "PROCESSING..."
-                : `CONFIRM AND PAY (${currency}${total.toFixed(2)})`}
+                : delivery_fee === 0
+                  ? `CONFIRM ORDER (${currency}${subtotal.toFixed(2)} + delivery)`
+                  : `CONFIRM AND PAY (${currency}${total.toFixed(2)})`
+              }
             </button>
           </div>
         </div>

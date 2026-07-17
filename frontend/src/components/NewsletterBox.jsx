@@ -12,10 +12,10 @@ const NewsletterBox = () => {
   
   return (
     <div className='text-center py-16'> {/* Added vertical padding for spacing */}
-        <p className='text-3xl font-semibold mb-4'>Subscribe now - get 20% offer</p>
+        <p className='text-3xl font-semibold mb-4'>Subscribe now - get 10% offer</p>
         <p className='w-full max-w-lg mx-auto text-gray-600 mb-8 px-4'> 
             {/* Used max-w-lg and center margin for better responsiveness */}
-            Join our newsletter to stay updated with the latest trends, exclusive offers, and new arrivals. Subscribe now and enjoy a special 20% discount on your first purchase!
+            Join our newsletter to stay updated with the latest trends, exclusive offers, and new arrivals. Subscribe now and enjoy a special 10% discount on your first purchase!
         </p>
         
         {/* Form: Increased overall max width for desktop input area */}

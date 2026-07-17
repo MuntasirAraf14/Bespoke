@@ -164,8 +164,10 @@ const Cart = () => {
             <div className="flex justify-between text-gray-700">
               <span>Delivery Fee:</span>
               <span className="font-medium">
-                {currency}
-                {delivery_fee.toFixed(2)}
+                {delivery_fee === 0
+                  ? <span className="text-sm text-gray-400 italic">Calculated at checkout</span>
+                  : `${currency}${delivery_fee.toFixed(2)}`
+                }
               </span>
             </div>
 
@@ -174,8 +176,10 @@ const Cart = () => {
             <div className="flex justify-between text-xl font-bold">
               <span>Total:</span>
               <span>
-                {currency}
-                {total.toFixed(2)}
+                {delivery_fee === 0
+                  ? `${currency}${subtotal.toFixed(2)}`
+                  : `${currency}${total.toFixed(2)}`
+                }
               </span>
             </div>
           </div>

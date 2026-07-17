@@ -8,7 +8,7 @@ import {toast} from 'react-toastify';
 
 
 
-const Add = ({ token }) => {
+const Add = ({ token, setToken }) => {
   const [image1, setImage1] = React.useState(null);
   const [image2, setImage2] = React.useState(null);
   const [image3, setImage3] = React.useState(null);
@@ -72,7 +72,13 @@ const Add = ({ token }) => {
       }
     } catch (error) {
       console.log("Error adding product:", error);
-      toast.error('Error adding product');
+      const message = error.response?.data?.message || 'Error adding product';
+      toast.error(message);
+
+      if (error.response?.status === 401) {
+        setToken('');
+        localStorage.removeItem('token');
+      }
     }
   };
 
@@ -110,6 +116,7 @@ const Add = ({ token }) => {
         <p className="mb-2">Product Name</p>
         <input
           onChange={(e) => setName(e.target.value)}
+          value={name}
           className="w-full max-w-[500px] px-3 py-2 border"
           type="text"
           placeholder="Product Name"
@@ -122,6 +129,7 @@ const Add = ({ token }) => {
         <p className="mb-2">Product Description</p>
         <textarea
           onChange={(e) => setDescription(e.target.value)}
+          value={description}
           className="w-full max-w-[500px] px-3 py-2 border"
           rows="4"
           placeholder="Product Description"
@@ -134,7 +142,9 @@ const Add = ({ token }) => {
         <p className="mt-5 mb-2">Category</p>
         <select
           onChange={(e) => setCategory(e.target.value)}
+          value={category}
           className="w-full px-3 py-2 border"
+          required
         >
           <option value="">Select Category</option>
           <option value="Men">Men</option>
@@ -148,7 +158,9 @@ const Add = ({ token }) => {
         <p className="mt-5 mb-2">Sub Category</p>
         <select
           onChange={(e) => setSubCategory(e.target.value)}
+          value={subCategory}
           className="w-full px-3 py-2 border"
+          required
         >
           <option value="">Select Sub Category</option>
           <option value="Topwear">Topwear</option>
@@ -162,9 +174,10 @@ const Add = ({ token }) => {
         <p className="mt-5 mb-2">Product Price</p>
         <input
           onChange={(e) => setPrice(e.target.value)}
+          value={price}
           className="w-full max-w-[500px] px-3 py-2 border"
           type="number"
-          placeholder="Product Price in USD"
+          placeholder="Product Price in ৳"
           required
         />
       </div>

@@ -15,7 +15,8 @@ const getUserCartData = async (userId, res) => {
 //add products to user cart
 const addToCart = async (req, res) => {
     try {
-        const { userId, productId, size } = req.body;
+        const { productId, size } = req.body;
+        const userId = req.userId;
 
         if (!productId || !size) {
             return sendError(res, 400, "Product ID and size are required");
@@ -46,7 +47,8 @@ const addToCart = async (req, res) => {
 //remove products from user cart
 const removeFromCart = async (req, res) => {
     try {
-        const { userId, productId, size } = req.body;
+        const { productId, size } = req.body;
+        const userId = req.userId;
 
         if (!productId || !size) {
             return sendError(res, 400, "Product ID and size are required");
@@ -79,7 +81,7 @@ const removeFromCart = async (req, res) => {
 //get user cart
 const getCart = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.userId;
         const cartData = await getUserCartData(userId, res);
         if (!cartData) return;
 
@@ -93,7 +95,8 @@ const getCart = async (req, res) => {
 //update user cart
 const updateCart = async (req, res) => {
     try {
-        const { userId, productId, size, quantity } = req.body;
+        const { productId, size, quantity } = req.body;
+        const userId = req.userId;
         const parsedQuantity = Number(quantity);
 
         if (!productId || !size || !Number.isFinite(parsedQuantity)) {

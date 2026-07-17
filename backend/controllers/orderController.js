@@ -2,6 +2,8 @@ import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import productModel from "../models/productModel.js";
 import dotenv from "dotenv";
+import crypto from "crypto";
+import validator from "validator";
 import { sendError, sendSuccess } from "../utils/http.js";
 dotenv.config();
 
@@ -16,47 +18,174 @@ const getDeliveryFee = (address) => {
     return isInsideDhaka ? INSIDE_DHAKA_FEE : OUTSIDE_DHAKA_FEE;
 };
 
-const calculateOrderAmount = async (items, address) => {
+const requiredAddressFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "street",
+    "city",
+    "state",
+    "zipCode",
+    "country",
+    "phone",
+];
+
+const normalizeString = (value) => String(value || "").trim();
+
+const normalizeAddress = (address) => {
+    if (!address || typeof address !== "object") {
+        throw new Error("Delivery address is required");
+    }
+
+    const normalized = requiredAddressFields.reduce((result, field) => {
+        result[field] = normalizeString(address[field]);
+        return result;
+    }, {});
+
+    const missing = requiredAddressFields.filter((field) => !normalized[field]);
+    if (missing.length > 0) {
+        throw new Error(`Address field(s) missing: ${missing.join(", ")}`);
+    }
+
+    if (!validator.isEmail(normalized.email)) {
+        throw new Error("A valid delivery email is required");
+    }
+
+    return normalized;
+};
+
+const buildOrderSnapshot = async (items, address) => {
     if (!Array.isArray(items) || items.length === 0) {
         throw new Error("Order must include at least one item");
     }
 
-    if (!address?.city || !address?.state) {
-        throw new Error("Address city and state are required");
+    const normalizedAddress = normalizeAddress(address);
+    const productIds = [...new Set(items.map((item) => normalizeString(item?._id || item?.productId)).filter(Boolean))];
+
+    if (productIds.length === 0) {
+        throw new Error("Each order item must include a product ID");
     }
 
-    let calculatedAmount = 0;
+    const products = await productModel.find({ _id: { $in: productIds } });
+    const productMap = new Map(products.map((product) => [product._id.toString(), product]));
+    const itemMap = new Map();
 
     for (const item of items) {
+        const productId = normalizeString(item?._id || item?.productId);
+        const size = normalizeString(item?.size);
         const quantity = Number(item.quantity);
-        if (!item._id || !Number.isInteger(quantity) || quantity <= 0) {
-            throw new Error("Each order item must include product ID and positive quantity");
+
+        if (!productId || !size || !Number.isInteger(quantity) || quantity <= 0) {
+            throw new Error("Each order item must include product ID, size, and positive quantity");
         }
 
-        const product = await productModel.findById(item._id);
+        const product = productMap.get(productId);
         if (!product) {
-            throw new Error(`Product not found: ${item.name || item._id}`);
+            throw new Error(`Product not found: ${item.name || productId}`);
         }
 
-        calculatedAmount += product.price * quantity;
+        if (!product.sizes?.includes(size)) {
+            throw new Error(`${product.name} is not available in size ${size}`);
+        }
+
+        const key = `${productId}:${size}`;
+        const current = itemMap.get(key);
+        const nextQuantity = (current?.quantity || 0) + quantity;
+
+        itemMap.set(key, {
+            productId: product._id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            category: product.category,
+            subCategory: product.subCategory,
+            size,
+            quantity: nextQuantity,
+            lineTotal: product.price * nextQuantity,
+        });
     }
 
-    return calculatedAmount + getDeliveryFee(address);
+    const orderItems = [...itemMap.values()];
+    const subtotal = orderItems.reduce((total, item) => total + item.lineTotal, 0);
+    const deliveryFee = getDeliveryFee(normalizedAddress);
+
+    return {
+        items: orderItems,
+        address: normalizedAddress,
+        deliveryFee,
+        amount: subtotal + deliveryFee,
+    };
+};
+
+const getSslcommerzClient = async () => {
+    const storeId = process.env.SSLCOMMERZ_STORE_ID;
+    const storePassword = process.env.SSLCOMMERZ_STORE_PASSWORD;
+    const isLive = process.env.SSLCOMMERZ_IS_LIVE === "true";
+
+    const SSLCommerzPayment = await import("sslcommerz-lts");
+    return new SSLCommerzPayment.default(storeId, storePassword, isLive);
+};
+
+const isValidPaymentStatus = (status) => ["VALID", "VALIDATED", "AUTHENTICATED"].includes(String(status || "").toUpperCase());
+
+const validateSslcommerzPayment = async ({ valId, order }) => {
+    if (!valId) {
+        throw new Error("Payment validation ID is required");
+    }
+
+    const sslcommerz = await getSslcommerzClient();
+    const validation = await sslcommerz.validate({ val_id: valId });
+
+    if (!isValidPaymentStatus(validation?.status)) {
+        throw new Error("Payment was not validated by SSLCommerz");
+    }
+
+    if (String(validation.tran_id) !== order._id.toString()) {
+        throw new Error("Payment transaction does not match this order");
+    }
+
+    if (String(validation.currency || "").toUpperCase() !== "BDT") {
+        throw new Error("Payment currency mismatch");
+    }
+
+    const paidAmount = Number(validation.amount);
+    if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - order.amount) > 0.01) {
+        throw new Error("Payment amount mismatch");
+    }
+
+    return validation;
+};
+
+const markOrderPaid = async ({ order, validation, valId }) => {
+    if (order.payment) {
+        return order;
+    }
+
+    order.payment = true;
+    order.status = "Order Placed";
+    order.transactionId = valId;
+    order.bankTransactionId = validation.bank_tran_id || null;
+    order.paymentValidation = validation;
+    order.paymentAttemptToken = null;
+    await order.save();
+    return order;
 };
 
 // Placing orders using COD Method
 const placeOrder = async (req, res) => {
     try {
-        const { userId, items, address, note } = req.body;
+        const { items, address, note } = req.body;
+        const userId = req.userId;
 
-        const calculatedAmount = await calculateOrderAmount(items, address);
+        const orderSnapshot = await buildOrderSnapshot(items, address);
 
         const orderData = {
             userId,
-            items,
-            address,
-            amount: calculatedAmount,
-            note, // Include note
+            items: orderSnapshot.items,
+            address: orderSnapshot.address,
+            amount: orderSnapshot.amount,
+            deliveryFee: orderSnapshot.deliveryFee,
+            note: normalizeString(note),
             paymentMethod: "COD",
             payment: false,
             date: Date.now()
@@ -89,7 +218,7 @@ const allOrders = async (req, res) => {
 // User Order Data For Frontend
 const userOrders = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.userId;
         const orders = await orderModel.find({ userId });
         sendSuccess(res, { orders });
     } catch (error) {
@@ -123,61 +252,61 @@ const updateStatus = async (req, res) => {
 // Placing orders using SSLCOMMERZ
 const placeOrderSslcommerz = async (req, res) => {
     try {
-        const { userId, items, address, note } = req.body;
+        const { items, address, note } = req.body;
+        const userId = req.userId;
 
-        const calculatedAmount = await calculateOrderAmount(items, address);
+        const orderSnapshot = await buildOrderSnapshot(items, address);
+        const paymentAttemptToken = crypto.randomBytes(32).toString("hex");
 
         const orderData = {
             userId,
-            items,
-            address,
-            amount: calculatedAmount,
-            note, // Include note
+            items: orderSnapshot.items,
+            address: orderSnapshot.address,
+            amount: orderSnapshot.amount,
+            deliveryFee: orderSnapshot.deliveryFee,
+            note: normalizeString(note),
             paymentMethod: "SSLCommerz",
             payment: false,
+            paymentAttemptToken,
             date: Date.now()
         }
 
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
-        const store_id = process.env.SSLCOMMERZ_STORE_ID;
-        const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
-        const is_live = process.env.SSLCOMMERZ_IS_LIVE === 'true';
         const backendUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
 
-        const SSLCommerzPayment = await import('sslcommerz-lts');
-        const sslcommerz = new SSLCommerzPayment.default(store_id, store_passwd, is_live);
+        const sslcommerz = await getSslcommerzClient();
 
         const data = {
-            total_amount: calculatedAmount,
+            total_amount: orderSnapshot.amount,
             currency: 'BDT',
             tran_id: newOrder._id.toString(), // Use order ID as transaction ID
-            success_url: `${backendUrl}/api/order/payment-success/${newOrder._id}`,
-            fail_url: `${backendUrl}/api/order/payment-fail/${newOrder._id}`,
-            cancel_url: `${backendUrl}/api/order/payment-cancel/${newOrder._id}`,
+            success_url: `${backendUrl}/api/order/payment-success/${newOrder._id}?attempt=${paymentAttemptToken}`,
+            fail_url: `${backendUrl}/api/order/payment-fail/${newOrder._id}?attempt=${paymentAttemptToken}`,
+            cancel_url: `${backendUrl}/api/order/payment-cancel/${newOrder._id}?attempt=${paymentAttemptToken}`,
             ipn_url: `${backendUrl}/api/order/ipn`,
             shipping_method: 'Courier',
-            product_name: 'General',
-            product_category: 'General',
+            product_name: orderSnapshot.items.map((item) => item.name).join(', ').slice(0, 255) || 'General',
+            product_category: 'Fashion',
             product_profile: 'general',
-            cus_name: address.firstName + ' ' + address.lastName,
-            cus_email: address.email,
-            cus_add1: address.street,
-            cus_add2: address.street,
-            cus_city: address.city,
-            cus_state: address.state,
-            cus_postcode: address.zipCode,
-            cus_country: address.country,
-            cus_phone: address.phone,
-            cus_fax: address.phone,
-            ship_name: address.firstName + ' ' + address.lastName,
-            ship_add1: address.street,
-            ship_add2: address.street,
-            ship_city: address.city,
-            ship_state: address.state,
-            ship_postcode: address.zipCode,
-            ship_country: address.country,
+            cus_name: orderSnapshot.address.firstName + ' ' + orderSnapshot.address.lastName,
+            cus_email: orderSnapshot.address.email,
+            cus_add1: orderSnapshot.address.street,
+            cus_add2: orderSnapshot.address.street,
+            cus_city: orderSnapshot.address.city,
+            cus_state: orderSnapshot.address.state,
+            cus_postcode: orderSnapshot.address.zipCode,
+            cus_country: orderSnapshot.address.country,
+            cus_phone: orderSnapshot.address.phone,
+            cus_fax: orderSnapshot.address.phone,
+            ship_name: orderSnapshot.address.firstName + ' ' + orderSnapshot.address.lastName,
+            ship_add1: orderSnapshot.address.street,
+            ship_add2: orderSnapshot.address.street,
+            ship_city: orderSnapshot.address.city,
+            ship_state: orderSnapshot.address.state,
+            ship_postcode: orderSnapshot.address.zipCode,
+            ship_country: orderSnapshot.address.country,
         };
 
         const apiResponse = await sslcommerz.init(data);
@@ -197,16 +326,22 @@ const placeOrderSslcommerz = async (req, res) => {
 const paymentSuccess = async (req, res) => {
     try {
         const { orderId } = req.params;
+        const { attempt } = req.query;
         const { val_id } = req.body;
 
-        // Validate payment with SSLCommerz (Optional but recommended)
-        // For now, we assume success if this URL is hit with valid data
-        
-        await orderModel.findByIdAndUpdate(orderId, { payment: true, transactionId: val_id });
+        const order = await orderModel.findById(orderId).select("+paymentAttemptToken");
+        if (!order) {
+            return sendError(res, 404, "Order not found");
+        }
+
+        if (order.paymentAttemptToken !== attempt) {
+            return sendError(res, 403, "Invalid payment attempt");
+        }
+
+        const validation = await validateSslcommerzPayment({ valId: val_id, order });
+        await markOrderPaid({ order, validation, valId: val_id });
         
         // Redirect to frontend success page
-        // Assuming frontend is running on localhost:5173 or similar. 
-        // Ideally, we should use an env variable for FRONTEND_URL
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         res.redirect(`${frontendUrl}/order`);
 
@@ -219,7 +354,11 @@ const paymentSuccess = async (req, res) => {
 const paymentFail = async (req, res) => {
     try {
         const { orderId } = req.params;
-        await orderModel.findByIdAndUpdate(orderId, { status: 'Payment Failed' });
+        const { attempt } = req.query;
+        await orderModel.findOneAndUpdate(
+            { _id: orderId, payment: false, paymentAttemptToken: attempt },
+            { status: 'Payment Failed', paymentAttemptToken: null }
+        );
         
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         res.redirect(`${frontendUrl}/cart`); // Redirect back to cart
@@ -232,7 +371,11 @@ const paymentFail = async (req, res) => {
 const paymentCancel = async (req, res) => {
     try {
         const { orderId } = req.params;
-        await orderModel.findByIdAndUpdate(orderId, { status: 'Payment Cancelled' });
+        const { attempt } = req.query;
+        await orderModel.findOneAndUpdate(
+            { _id: orderId, payment: false, paymentAttemptToken: attempt },
+            { status: 'Payment Cancelled', paymentAttemptToken: null }
+        );
         
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         res.redirect(`${frontendUrl}/cart`);
@@ -245,15 +388,15 @@ const paymentCancel = async (req, res) => {
 const verifyIpn = async (req, res) => {
     try {
         const { tran_id, status, val_id } = req.body;
-        console.log('IPN received:', { tran_id, status, val_id });
 
-        if (status === 'VALID' || status === 'AUTHENTICATED') {
-            await orderModel.findByIdAndUpdate(tran_id, { 
-                payment: true, 
-                transactionId: val_id,
-                status: 'Order Placed' // Ensure status is correct
-            });
-            console.log(`Order ${tran_id} marked as paid via IPN`);
+        if (isValidPaymentStatus(status)) {
+            const order = await orderModel.findById(tran_id).select("+paymentAttemptToken");
+            if (!order) {
+                return sendError(res, 404, "Order not found");
+            }
+
+            const validation = await validateSslcommerzPayment({ valId: val_id, order });
+            await markOrderPaid({ order, validation, valId: val_id });
         }
 
         res.status(200).send('IPN Received');

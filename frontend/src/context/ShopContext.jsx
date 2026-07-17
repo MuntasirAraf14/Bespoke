@@ -4,19 +4,25 @@ import axios from "axios";
 import { ShopContext } from "./shopContext";
 
 const ShopContextProvider = (props) => {
-  const currency = "$";
+  const currency = "৳";
   // const delivery_fee = 10; // Removed constant, now using state below
+  const tokenStorageKey = "bespoke_customer_token";
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [search, setSearch] = React.useState("");
   const [showSearch, setShowSearch] = React.useState(false);
   const [products, setProducts] = React.useState([]);
-  const [token, setToken] = React.useState(() => localStorage.getItem("token") || "");
-  const [delivery_fee, setDeliveryFee] = React.useState(10); // Changed to state for dynamic updates
+  const [token, setToken] = React.useState(() => localStorage.getItem(tokenStorageKey) || "");
+  const [delivery_fee, setDeliveryFee] = React.useState(0); // 0 until user enters city/state on checkout
 
   // 1. Initialize cartItems by checking localStorage first.
   const [cartItems, setCartItems] = React.useState(() => {
     const storedCart = localStorage.getItem("cartData");
-    return storedCart ? JSON.parse(storedCart) : {};
+    try {
+      return storedCart ? JSON.parse(storedCart) : {};
+    } catch {
+      localStorage.removeItem("cartData");
+      return {};
+    }
   });
 
   // 2. Synchronization Effect: Save cartItems to localStorage whenever the state changes.
@@ -157,14 +163,24 @@ const ShopContextProvider = (props) => {
 
   const getProductsData = useCallback(async () => {
     try {
-      const response = await axios.get(`${backendURL}/api/product/list`);
-      console.log("API Response:", response.data);
-      if (response.data.success) {
-        setProducts(response.data.products);
-        console.log("Products set:", response.data.products);
-      } else {
-        toast.error(response.data.message);
-      }
+      const limit = 100;
+      let page = 1;
+      let pages = 1;
+      const allProducts = [];
+
+      do {
+        const response = await axios.get(`${backendURL}/api/product/list?page=${page}&limit=${limit}`);
+        if (!response.data.success) {
+          toast.error(response.data.message);
+          return;
+        }
+
+        allProducts.push(...response.data.products);
+        pages = response.data.pagination?.pages || 1;
+        page += 1;
+      } while (page <= pages);
+
+      setProducts(allProducts);
     } catch (error) {
       console.log("Error fetching products:", error);
       toast.error("Error fetching products");
@@ -195,6 +211,22 @@ const ShopContextProvider = (props) => {
   }, [getProductsData]);
 
   useEffect(() => {
+    const refreshProducts = () => {
+      if (!document.hidden) {
+        getProductsData();
+      }
+    };
+
+    window.addEventListener("focus", refreshProducts);
+    document.addEventListener("visibilitychange", refreshProducts);
+
+    return () => {
+      window.removeEventListener("focus", refreshProducts);
+      document.removeEventListener("visibilitychange", refreshProducts);
+    };
+  }, [getProductsData]);
+
+  useEffect(() => {
     if (token) {
       getUserCart(token);
     }
@@ -222,6 +254,7 @@ const ShopContextProvider = (props) => {
     backendURL: backendURL,
     token: token,
     setToken: setToken,
+    tokenStorageKey,
   };
 
   return (

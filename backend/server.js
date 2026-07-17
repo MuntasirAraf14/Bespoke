@@ -22,6 +22,7 @@ import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRouter.js";
 import orderRouter from "./routes/orderRoute.js";
+import jobApplicationRouter from "./routes/jobApplicationRoute.js";
 import cloudinary from "cloudinary";
 import helmet from "helmet";
 import compression from "compression";
@@ -51,8 +52,8 @@ const init = async () => {
 };
 
 // middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 
 // Strict CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -60,7 +61,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173', 'http://localhost:4174', 'http://127.0.0.1:4173', 'http://127.0.0.1:4174'];
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.trycloudflare.com')) {
+        const allowCloudflareTunnel = process.env.ALLOW_CLOUDFLARE_TUNNEL === "true";
+        if (!origin || allowedOrigins.includes(origin) || (allowCloudflareTunnel && origin.endsWith('.trycloudflare.com'))) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -86,6 +88,7 @@ app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/job-application", jobApplicationRouter);
 
 app.get("/", (req, res) => {
     res.send("API working");
@@ -102,9 +105,11 @@ app.get("/health", (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(err.status || 500).json({
+    const status = err.status || err.statusCode || 500;
+    const exposeMessage = status < 500 || process.env.NODE_ENV !== "production";
+    res.status(status).json({
         success: false,
-        message: err.message || "Internal Server Error",
+        message: exposeMessage ? (err.message || "Internal Server Error") : "Internal Server Error",
     });
 });
 

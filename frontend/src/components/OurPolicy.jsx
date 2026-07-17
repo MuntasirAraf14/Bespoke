@@ -8,7 +8,7 @@ const OurPolicy = () => {
             <img src={assets.receving_img} className='w-12 m-auto mb-5' alt="Exchange Icon" />
             <h2 className='text-center text-xl font-semibold mb-2'>Easy Exchange Policy</h2>
             <p className='w-3/4 m-auto text-center text-gray-600 text-sm'>
-                We offer a hassle-free exchange policy within 30 days of purchase. If you're not completely satisfied with your order, simply contact our customer service team to initiate the exchange process. Please ensure that the items are in their original condition with tags attached.
+                We offer a hassle-free exchange policy within 72 hours of receiving your order. If you're not completely satisfied with your purchase, simply contact our customer service team to initiate the exchange process. Please ensure that the items are in their original condition with tags attached.
             </p>    
         </div>
         <div>

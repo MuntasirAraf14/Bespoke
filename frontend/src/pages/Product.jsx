@@ -4,7 +4,6 @@ import React, { useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
 import { ShopContext } from "../context/shopContext";
-import { assets } from "../assets/assets";
 import RelatedProducts from "../components/RelatedProducts";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import SizeGuide from "../components/SizeGuide";
@@ -58,12 +57,7 @@ const Product = () => {
         <div className="flex-1">
           <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
           <div className="flex items-center gap-1 mt-2">
-            <img src={assets.star_icon} alt="" className="w-3 5" />
-            <img src={assets.star_icon} alt="" className="w-3 5" />
-            <img src={assets.star_icon} alt="" className="w-3 5" />
-            <img src={assets.star_icon} alt="" className="w-3 5" />
-            <img src={assets.star_icon} alt="" className="w-3 5" />
-            <p className="pl-2">(122)</p>
+            <span className="text-sm text-gray-400 italic">No reviews yet</span>
           </div>
           <p className="mt-5 text-3xl font-medium">
             {currency}
@@ -114,7 +108,7 @@ const Product = () => {
       <div className="mt-20">
         <div className="flex">
           <b className="border px-5 py-3 text-sm">Description</b>
-          <p className="border px-5 py-3 text-sm">Reviews(122)</p>
+          <p className="border px-5 py-3 text-sm">Reviews</p>
         </div>
         <div className="flex flex-col gap-4 border border-gray-300 px-6 py-6 text-sm text-gray-800">
           <p>{productData.description}</p>

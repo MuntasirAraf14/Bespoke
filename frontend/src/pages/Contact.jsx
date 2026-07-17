@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import Title from '../components/Title'
 import { assets } from '../assets/assets'
 import NewsletterBox from '../components/NewsletterBox'
@@ -17,24 +18,27 @@ const Contact = () => {
             Our Store
           </p>
           <p className='text-gray-600'>
-            54709 West 2nd Street, Suite 
+             Aftabnagar, Dhaka, Bangladesh
             <br />
-            San Francisco, CA 94107
+            
           </p>
           
           <p className='text-shadow-gray-500'>
             Tel : (+880) 0000000 <br/>
-            Email: blabla@gmail.com
+            Email: bespokeBD@gmail.com
           </p>
           <p className='font-semibold text-xl text-gray-800'>
-            Careers at Forever
+            Careers at BESPOKE
           </p>
           <p className='text-gray-700'>
             Learn more about our Teams and Culture.
           </p>
-          <button className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500 rounded-xl'>
+          <Link
+            to="/careers"
+            className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500 rounded-xl'
+          >
             Explore Jobs
-          </button>
+          </Link>
 
         </div>
       </div>

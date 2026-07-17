@@ -5,17 +5,24 @@ import { Routes, Route } from "react-router-dom";
 import Add from "../pages/Add";
 import List from "../pages/List";
 import Orders from "../pages/Orders";
+import Dashboard from "../pages/Dashboard";
+import JobApplications from "../pages/JobApplications";
 import Login from "../components/Login";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
+  const tokenStorageKey = 'bespoke_admin_token';
 
-  const [token, setToken] = React.useState(localStorage.getItem('token') ? localStorage.getItem('token') : '');
+  const [token, setToken] = React.useState(localStorage.getItem(tokenStorageKey) ? localStorage.getItem(tokenStorageKey) : '');
 
  useEffect(() => {
-  localStorage.setItem('token', token);
-}, [token]);
+  if (token) {
+    localStorage.setItem(tokenStorageKey, token);
+  } else {
+    localStorage.removeItem(tokenStorageKey);
+  }
+}, [token, tokenStorageKey]);
 
 
   return (
@@ -29,9 +36,11 @@ const App = () => {
           <Sidebar />
           <div className="w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-900 text-base">
               <Routes>
-                <Route path="/add" element={<Add token={token} />} />
+                <Route path="/" element={<Dashboard token={token} />} />
+                <Route path="/add" element={<Add token={token} setToken={setToken} />} />
                 <Route path="/list" element={<List token={token} />} />
                 <Route path="/orders" element={<Orders token={token} />} />
+                <Route path="/job-applications" element={<JobApplications token={token} />} />
               </Routes>
           </div>
         </div>

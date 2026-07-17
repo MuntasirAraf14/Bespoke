@@ -13,8 +13,18 @@ const requiredEnvs = [
     'SSLCOMMERZ_STORE_PASSWORD',
 ];
 
+const productionRequiredEnvs = [
+    'ALLOWED_ORIGINS',
+    'BACKEND_URL',
+    'FRONTEND_URL',
+    'GOOGLE_CLIENT_ID',
+];
+
 export const validateEnv = () => {
-    const missing = requiredEnvs.filter(env => !process.env[env]);
+    const required = process.env.NODE_ENV === 'production'
+        ? [...requiredEnvs, ...productionRequiredEnvs]
+        : requiredEnvs;
+    const missing = required.filter(env => !process.env[env]);
     if (missing.length > 0) {
         console.error('CRITICAL: Missing required environment variables:', missing.join(', '));
         process.exit(1);

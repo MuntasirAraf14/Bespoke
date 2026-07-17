@@ -9,12 +9,24 @@ const List = ({ token }) => {
 
   const fetchList = async () => {
     try {
-      const response = await axios.get(backendURL + '/api/product/list');
-      if (response.data.success) {
-        setList(response.data.products);
-      } else {
-        toast.error('Failed to fetch product list');
-      }
+      const limit = 100;
+      let page = 1;
+      let pages = 1;
+      const allProducts = [];
+
+      do {
+        const response = await axios.get(`${backendURL}/api/product/list?page=${page}&limit=${limit}`);
+        if (!response.data.success) {
+          toast.error('Failed to fetch product list');
+          return;
+        }
+
+        allProducts.push(...response.data.products);
+        pages = response.data.pagination?.pages || 1;
+        page += 1;
+      } while (page <= pages);
+
+      setList(allProducts);
     } catch (error) {
       console.log(error);
       toast.error('Error fetching product list');
